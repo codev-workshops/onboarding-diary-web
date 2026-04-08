@@ -143,19 +143,19 @@ export class ReportService {
 
     if (report.tasks && report.tasks.length > 0) {
       lines.push(...this.formatCsvSection(report.tasks, 'TASKS', 'Date,Title,Description,Category,Status,Priority',
-        (t) => `"${t.date}","${t.title}","${this.escapeCsvField(t.description)}","${t.category}","${t.status}","${t.priority}"`
+        (t) => `"${this.escapeCsvField(t.date)}","${this.escapeCsvField(t.title)}","${this.escapeCsvField(t.description)}","${t.category}","${t.status}","${t.priority}"`
       ));
     }
 
     if (report.issues && report.issues.length > 0) {
       lines.push(...this.formatCsvSection(report.issues, 'ISSUES', 'Date,Title,Description,Severity,Status,Resolution Notes',
-        (i) => `"${i.date}","${i.title}","${this.escapeCsvField(i.description)}","${i.severity}","${i.status}","${this.escapeCsvField(i.resolutionNotes)}"`
+        (i) => `"${this.escapeCsvField(i.date)}","${this.escapeCsvField(i.title)}","${this.escapeCsvField(i.description)}","${i.severity}","${i.status}","${this.escapeCsvField(i.resolutionNotes)}"`
       ));
     }
 
     if (report.feedback && report.feedback.length > 0) {
       lines.push(...this.formatCsvSection(report.feedback, 'FEEDBACK', 'Date,Subject,Type,Details',
-        (fb) => `"${fb.date}","${fb.subject}","${fb.type}","${this.escapeCsvField(fb.details)}"`
+        (fb) => `"${this.escapeCsvField(fb.date)}","${this.escapeCsvField(fb.subject)}","${fb.type}","${this.escapeCsvField(fb.details)}"`
       ));
     }
 
@@ -163,7 +163,7 @@ export class ReportService {
       lines.push(...this.formatCsvSection(report.notes, 'NOTES', 'Date,Title,Content,Tags',
         (n) => {
           const tags = Array.isArray(n.tags) ? (n.tags as string[]).join('; ') : '';
-          return `"${n.date}","${n.title}","${this.escapeCsvField(n.content)}","${tags}"`;
+          return `"${this.escapeCsvField(n.date)}","${this.escapeCsvField(n.title)}","${this.escapeCsvField(n.content)}","${tags}"`;
         }
       ));
     }

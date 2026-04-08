@@ -15,13 +15,13 @@ export default function ReportsPage() {
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState('tasks');
 
   const handleGenerate = async () => {
     if (!dateFrom || !dateTo) { setError('Please select date range'); return; }
     setError(''); setLoading(true);
     try {
-      const params = { from: dateFrom, to: dateTo, categories };
+      const params = { dateFrom, dateTo, categories };
       const res = await reportsApi.generate(params);
       setReport(res.data.report);
     } catch { setError('Failed to generate report'); }
@@ -31,7 +31,7 @@ export default function ReportsPage() {
   const handleDownloadCsv = async () => {
     if (!dateFrom || !dateTo) return;
     try {
-      const res = await reportsApi.downloadCsv({ from: dateFrom, to: dateTo, categories });
+      const res = await reportsApi.downloadCsv({ dateFrom, dateTo, categories });
       const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]));
       const link = document.createElement('a');
       link.href = url;
@@ -78,13 +78,13 @@ export default function ReportsPage() {
             Report: {new Date(report.dateRange.from).toLocaleDateString()} - {new Date(report.dateRange.to).toLocaleDateString()}
           </Typography>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-            {report.tasks && <Tab label={`Tasks (${report.tasks.length})`} />}
-            {report.issues && <Tab label={`Issues (${report.issues.length})`} />}
-            {report.feedback && <Tab label={`Feedback (${report.feedback.length})`} />}
-            {report.notes && <Tab label={`Notes (${report.notes.length})`} />}
+            {report.tasks && <Tab value="tasks" label={`Tasks (${report.tasks.length})`} />}
+            {report.issues && <Tab value="issues" label={`Issues (${report.issues.length})`} />}
+            {report.feedback && <Tab value="feedback" label={`Feedback (${report.feedback.length})`} />}
+            {report.notes && <Tab value="notes" label={`Notes (${report.notes.length})`} />}
           </Tabs>
 
-          {tab === 0 && report.tasks && (
+          {tab === 'tasks' && report.tasks && (
             <TableContainer>
               <Table size="small">
                 <TableHead><TableRow>
@@ -103,7 +103,7 @@ export default function ReportsPage() {
               </Table>
             </TableContainer>
           )}
-          {tab === 1 && report.issues && (
+          {tab === 'issues' && report.issues && (
             <TableContainer>
               <Table size="small">
                 <TableHead><TableRow>
@@ -122,7 +122,7 @@ export default function ReportsPage() {
               </Table>
             </TableContainer>
           )}
-          {tab === 2 && report.feedback && (
+          {tab === 'feedback' && report.feedback && (
             <TableContainer>
               <Table size="small">
                 <TableHead><TableRow>
@@ -139,7 +139,7 @@ export default function ReportsPage() {
               </Table>
             </TableContainer>
           )}
-          {tab === 3 && report.notes && (
+          {tab === 'notes' && report.notes && (
             <TableContainer>
               <Table size="small">
                 <TableHead><TableRow>
