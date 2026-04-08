@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, Block, CheckCircle } from '@mui/icons-material';
 import { adminApi } from '../../api/admin';
-import { User } from '../../types';
+import type { User } from '../../types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 export default function UserListPage() {

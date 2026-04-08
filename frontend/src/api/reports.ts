@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { ReportData } from '../types';
+import type { ReportData } from '../types';
 
 export const reportsApi = {
   generate: (params: Record<string, string>) =>

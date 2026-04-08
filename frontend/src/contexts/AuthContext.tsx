@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User } from '../types';
+import type { User } from '../types';
 import { authApi } from '../api/auth';
 import { profileApi } from '../api/profile';
 

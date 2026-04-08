@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { notesApi } from '../../api/notes';
-import { AdditionalNote } from '../../types';
+import type { AdditionalNote } from '../../types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 export default function NoteListPage() {

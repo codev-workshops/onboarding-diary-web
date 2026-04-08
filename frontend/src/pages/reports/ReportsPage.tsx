@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Download } from '@mui/icons-material';
 import { reportsApi } from '../../api/reports';
-import { ReportData } from '../../types';
+import type { ReportData } from '../../types';
 
 export default function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('');

@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { Role } from '../../types';
+import type { Role } from '../../types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Visibility } from '@mui/icons-material';
 import { managerApi } from '../../api/manager';
-import { User } from '../../types';
+import type { User } from '../../types';
 
 export default function RecruitListPage() {
   const navigate = useNavigate();

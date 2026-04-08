@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { feedbackApi } from '../../api/feedback';
-import { FeedbackNote } from '../../types';
+import type { FeedbackNote } from '../../types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const typeColors: Record<string, 'success' | 'info' | 'warning'> = {

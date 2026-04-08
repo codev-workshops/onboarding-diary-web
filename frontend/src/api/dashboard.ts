@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { DashboardSummary, RecentEntry } from '../types';
+import type { DashboardSummary, RecentEntry } from '../types';
 
 export const dashboardApi = {
   getSummary: () =>

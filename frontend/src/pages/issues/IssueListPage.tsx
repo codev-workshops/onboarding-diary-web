@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, CheckCircle } from '@mui/icons-material';
 import { issuesApi } from '../../api/issues';
-import { IssueLog } from '../../types';
+import type { IssueLog } from '../../types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const statusColors: Record<string, 'default' | 'warning' | 'success' | 'info'> = {

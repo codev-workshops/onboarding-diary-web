@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { TaskLog, PaginatedResponse } from '../types';
+import type { TaskLog, PaginatedResponse } from '../types';
 
 export const tasksApi = {
   list: (params?: Record<string, string>) =>

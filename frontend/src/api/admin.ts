@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { User, PaginatedResponse } from '../types';
+import type { User, PaginatedResponse } from '../types';
 
 export const adminApi = {
   listUsers: (params?: Record<string, string>) =>

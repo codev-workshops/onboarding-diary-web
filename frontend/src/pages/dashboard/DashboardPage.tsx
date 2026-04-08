@@ -15,7 +15,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { dashboardApi } from '../../api/dashboard';
-import { DashboardSummary, RecentEntry } from '../../types';
+import type { DashboardSummary, RecentEntry } from '../../types';
 
 export default function DashboardPage() {
   const navigate = useNavigate();

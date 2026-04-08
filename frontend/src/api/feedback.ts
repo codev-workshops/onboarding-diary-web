@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { FeedbackNote, PaginatedResponse } from '../types';
+import type { FeedbackNote, PaginatedResponse } from '../types';
 
 export const feedbackApi = {
   list: (params?: Record<string, string>) =>

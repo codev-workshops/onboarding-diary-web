@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { tasksApi } from '../../api/tasks';
-import { TaskLog } from '../../types';
+import type { TaskLog } from '../../types';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const statusColors: Record<string, 'default' | 'primary' | 'success' | 'warning'> = {

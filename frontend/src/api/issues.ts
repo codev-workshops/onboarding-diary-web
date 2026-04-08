@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { IssueLog, PaginatedResponse } from '../types';
+import type { IssueLog, PaginatedResponse } from '../types';
 
 export const issuesApi = {
   list: (params?: Record<string, string>) =>

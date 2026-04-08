@@ -5,7 +5,7 @@ import {
   TableHead, TableRow, Paper, Chip, Alert, CircularProgress,
 } from '@mui/material';
 import { managerApi } from '../../api/manager';
-import { TaskLog, IssueLog, FeedbackNote, AdditionalNote } from '../../types';
+import type { TaskLog, IssueLog, FeedbackNote, AdditionalNote } from '../../types';
 
 export default function RecruitDetailPage() {
   const { id } = useParams<{ id: string }>();

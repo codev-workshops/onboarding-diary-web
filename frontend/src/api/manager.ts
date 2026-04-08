@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { PaginatedResponse, TaskLog, IssueLog, FeedbackNote, AdditionalNote } from '../types';
+import type { PaginatedResponse, TaskLog, IssueLog, FeedbackNote, AdditionalNote } from '../types';
 
 export const managerApi = {
   listRecruits: (params?: Record<string, string>) =>
