@@ -14,7 +14,7 @@ export const signupValidation = [
     .withMessage('Password must contain at least one uppercase letter')
     .matches(/[a-z]/)
     .withMessage('Password must contain at least one lowercase letter')
-    .matches(/[0-9]/)
+    .matches(/\d/)
     .withMessage('Password must contain at least one number')
     .matches(/[!@#$%^&*]/)
     .withMessage('Password must contain at least one special character (!@#$%^&*)'),
@@ -48,7 +48,7 @@ export const resetPasswordValidation = [
     .withMessage('Password must contain at least one uppercase letter')
     .matches(/[a-z]/)
     .withMessage('Password must contain at least one lowercase letter')
-    .matches(/[0-9]/)
+    .matches(/\d/)
     .withMessage('Password must contain at least one number')
     .matches(/[!@#$%^&*]/)
     .withMessage('Password must contain at least one special character (!@#$%^&*)'),

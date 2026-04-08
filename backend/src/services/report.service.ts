@@ -120,51 +120,52 @@ export class ReportService {
     return reports;
   }
 
+  private escapeCsvField(value: unknown): string {
+    return String(value || '').replace(/"/g, '""');
+  }
+
+  private formatCsvSection(
+    items: Array<Record<string, unknown>>,
+    header: string,
+    columns: string,
+    rowFormatter: (item: Record<string, unknown>) => string
+  ): string[] {
+    const lines: string[] = [header, columns];
+    for (const item of items) {
+      lines.push(rowFormatter(item));
+    }
+    lines.push('');
+    return lines;
+  }
+
   formatReportAsCsv(report: ReportData): string {
     const lines: string[] = [];
 
     if (report.tasks && report.tasks.length > 0) {
-      lines.push('TASKS');
-      lines.push('Date,Title,Description,Category,Status,Priority');
-      for (const task of report.tasks) {
-        lines.push(
-          `"${task.date}","${task.title}","${String(task.description || '').replace(/"/g, '""')}","${task.category}","${task.status}","${task.priority}"`
-        );
-      }
-      lines.push('');
+      lines.push(...this.formatCsvSection(report.tasks, 'TASKS', 'Date,Title,Description,Category,Status,Priority',
+        (t) => `"${t.date}","${t.title}","${this.escapeCsvField(t.description)}","${t.category}","${t.status}","${t.priority}"`
+      ));
     }
 
     if (report.issues && report.issues.length > 0) {
-      lines.push('ISSUES');
-      lines.push('Date,Title,Description,Severity,Status,Resolution Notes');
-      for (const issue of report.issues) {
-        lines.push(
-          `"${issue.date}","${issue.title}","${String(issue.description || '').replace(/"/g, '""')}","${issue.severity}","${issue.status}","${String(issue.resolutionNotes || '').replace(/"/g, '""')}"`
-        );
-      }
-      lines.push('');
+      lines.push(...this.formatCsvSection(report.issues, 'ISSUES', 'Date,Title,Description,Severity,Status,Resolution Notes',
+        (i) => `"${i.date}","${i.title}","${this.escapeCsvField(i.description)}","${i.severity}","${i.status}","${this.escapeCsvField(i.resolutionNotes)}"`
+      ));
     }
 
     if (report.feedback && report.feedback.length > 0) {
-      lines.push('FEEDBACK');
-      lines.push('Date,Subject,Type,Details');
-      for (const fb of report.feedback) {
-        lines.push(
-          `"${fb.date}","${fb.subject}","${fb.type}","${String(fb.details || '').replace(/"/g, '""')}"`
-        );
-      }
-      lines.push('');
+      lines.push(...this.formatCsvSection(report.feedback, 'FEEDBACK', 'Date,Subject,Type,Details',
+        (fb) => `"${fb.date}","${fb.subject}","${fb.type}","${this.escapeCsvField(fb.details)}"`
+      ));
     }
 
     if (report.notes && report.notes.length > 0) {
-      lines.push('NOTES');
-      lines.push('Date,Title,Content,Tags');
-      for (const note of report.notes) {
-        const tags = Array.isArray(note.tags) ? (note.tags as string[]).join('; ') : '';
-        lines.push(
-          `"${note.date}","${note.title}","${String(note.content || '').replace(/"/g, '""')}","${tags}"`
-        );
-      }
+      lines.push(...this.formatCsvSection(report.notes, 'NOTES', 'Date,Title,Content,Tags',
+        (n) => {
+          const tags = Array.isArray(n.tags) ? (n.tags as string[]).join('; ') : '';
+          return `"${n.date}","${n.title}","${this.escapeCsvField(n.content)}","${tags}"`;
+        }
+      ));
     }
 
     return lines.join('\n');
