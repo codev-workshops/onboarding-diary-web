@@ -127,6 +127,7 @@ def start_backend():
         print("  Backend is already running (PID: {}).".format(pid))
         return
 
+    ensure_pid_dir()
     print("  Starting backend...")
 
     # Run prisma generate first
@@ -167,6 +168,7 @@ def start_frontend():
         print("  Frontend is already running (PID: {}).".format(pid))
         return
 
+    ensure_pid_dir()
     print("  Starting frontend...")
 
     log_file = os.path.join(PID_DIR, "frontend.log")
