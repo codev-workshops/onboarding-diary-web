@@ -12,8 +12,8 @@ export function parsePagination(
   query: PaginationQuery,
   defaultSortBy = 'createdAt'
 ): ParsedPagination {
-  const page = Math.max(1, parseInt(query.page || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit || '10', 10)));
+  const page = Math.max(1, parseInt(query.page || '1', 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit || '10', 10) || 1));
   const skip = (page - 1) * limit;
   const sortBy = query.sortBy || defaultSortBy;
   const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';

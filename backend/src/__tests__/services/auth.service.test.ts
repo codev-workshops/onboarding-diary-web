@@ -147,12 +147,29 @@ describe('AuthService', () => {
       ).rejects.toThrow(AppError);
     });
 
+    it('should throw if user is deactivated', async () => {
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        id: 'token-1',
+        tokenHash: 'hash',
+        expiresAt: new Date(Date.now() + 86400000),
+        user: { id: 'user-1', email: 'test@example.com', role: 'recruit', isActive: false },
+      });
+      prisma.refreshToken.delete.mockResolvedValue({});
+
+      try {
+        await authService.refreshTokens('deactivated-user-token');
+      } catch (err) {
+        expect((err as AppError).statusCode).toBe(401);
+        expect((err as AppError).code).toBe('ACCOUNT_DISABLED');
+      }
+    });
+
     it('should return new tokens for valid refresh token', async () => {
       prisma.refreshToken.findUnique.mockResolvedValue({
         id: 'token-1',
         tokenHash: 'hash',
         expiresAt: new Date(Date.now() + 86400000),
-        user: { id: 'user-1', email: 'test@example.com', role: 'recruit' },
+        user: { id: 'user-1', email: 'test@example.com', role: 'recruit', isActive: true },
       });
       prisma.refreshToken.delete.mockResolvedValue({});
       prisma.refreshToken.create.mockResolvedValue({});

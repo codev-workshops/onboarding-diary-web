@@ -74,6 +74,11 @@ export class AuthService {
       throw new AppError(401, 'INVALID_TOKEN', 'Invalid or expired refresh token');
     }
 
+    if (!storedToken.user.isActive) {
+      await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+      throw new AppError(401, 'ACCOUNT_DISABLED', 'Account has been deactivated');
+    }
+
     await prisma.refreshToken.delete({ where: { id: storedToken.id } });
 
     const tokens = await this.generateTokens({
