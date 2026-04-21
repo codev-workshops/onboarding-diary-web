@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { noteController } from '../controllers/note.controller';
+import { authenticate } from '../middleware/auth';
+
+const router = Router();
+
+router.use(authenticate);
+
+router.get('/', noteController.listTags.bind(noteController));
+
+export default router;

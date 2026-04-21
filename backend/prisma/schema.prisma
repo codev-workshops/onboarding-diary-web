@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  recruit
+  manager
+  admin
+}
+
+enum TaskCategory {
+  learning
+  setup
+  meeting
+  coding
+  documentation
+  other
+}
+
+enum TaskStatus {
+  not_started
+  in_progress
+  completed
+  deferred
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum IssueSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum IssueStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum FeedbackType {
+  positive
+  suggestion
+  concern
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(recruit)
+  department   String?
+  startDate    DateTime? @map("start_date") @db.Date
+  managerId    String?  @map("manager_id")
+  isActive     Boolean  @default(true) @map("is_active")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  manager       User?          @relation("ManagerRecruits", fields: [managerId], references: [id])
+  recruits      User[]         @relation("ManagerRecruits")
+  taskLogs      TaskLog[]
+  issueLogs     IssueLog[]
+  feedbackNotes FeedbackNote[]
+  notes         AdditionalNote[]
+  refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([managerId])
+  @@index([role])
+  @@map("users")
+}
+
+model TaskLog {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  date        DateTime     @db.Date
+  title       String
+  description String?
+  category    TaskCategory
+  status      TaskStatus   @default(not_started)
+  priority    TaskPriority @default(medium)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([userId, date])
+  @@index([status])
+  @@index([category])
+  @@map("task_logs")
+}
+
+model IssueLog {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  date            DateTime      @db.Date
+  title           String
+  description     String
+  severity        IssueSeverity @default(medium)
+  status          IssueStatus   @default(open)
+  resolutionNotes String?       @map("resolution_notes")
+  resolvedAt      DateTime?     @map("resolved_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@index([severity])
+  @@map("issue_logs")
+}
+
+model FeedbackNote {
+  id        String       @id @default(uuid())
+  userId    String       @map("user_id")
+  date      DateTime     @db.Date
+  subject   String
+  type      FeedbackType
+  details   String
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([type])
+  @@map("feedback_notes")
+}
+
+model AdditionalNote {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  date      DateTime @db.Date
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags NoteTag[]
+
+  @@index([userId])
+  @@index([date])
+  @@map("additional_notes")
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+
+  notes NoteTag[]
+
+  @@map("tags")
+}
+
+model NoteTag {
+  noteId String @map("note_id")
+  tagId  String @map("tag_id")
+
+  note AdditionalNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag  Tag            @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+  @@map("note_tags")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
