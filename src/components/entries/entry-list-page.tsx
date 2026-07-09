@@ -47,7 +47,34 @@ function cellValue(entry: Entry, key: string): string {
 
 const PAGE_SIZE = 20;
 
-export function EntryListPage({ def }: { def: ModuleDef }) {
+function CardWrapper({
+  readOnly,
+  href,
+  children,
+}: {
+  readOnly: boolean;
+  href: string;
+  children: React.ReactNode;
+}) {
+  const className = "block min-h-[44px] rounded bg-white p-4 shadow-sm";
+  if (readOnly) return <div className={className}>{children}</div>;
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
+export function EntryListPage({
+  def,
+  userId,
+  readOnly = false,
+}: {
+  def: ModuleDef;
+  /** Read another user's entries via `?userId=` (manager/admin scoped read). */
+  userId?: string;
+  readOnly?: boolean;
+}) {
   const router = useRouter();
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [page, setPage] = useState(1);
@@ -62,6 +89,7 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({ page: String(page) });
+    if (userId) params.set("userId", userId);
     for (const [key, value] of Object.entries(filters)) {
       if (value) params.set(key, value);
     }
@@ -77,7 +105,7 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
     } finally {
       setLoading(false);
     }
-  }, [def.apiPath, filters, page]);
+  }, [def.apiPath, filters, page, userId]);
 
   useEffect(() => {
     void load();
@@ -137,12 +165,14 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">{def.title}</h1>
-        <Link
-          href={`${def.basePath}/new`}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          New {def.singular}
-        </Link>
+        {!readOnly && (
+          <Link
+            href={`${def.basePath}/new`}
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            New {def.singular}
+          </Link>
+        )}
       </div>
 
       {/* Filter bar: disclosure on mobile, inline above sm */}
@@ -177,6 +207,8 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
           <div className="rounded border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
             {Object.values(filters).some(Boolean) ? (
               <>No {def.title.toLowerCase()} match the current filters.</>
+            ) : readOnly ? (
+              <>No {def.title.toLowerCase()} recorded yet.</>
             ) : (
               <>
                 No {def.title.toLowerCase()} yet.{" "}
@@ -210,8 +242,15 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
                   {data.items.map((entry) => (
                     <tr
                       key={entry.id}
-                      onClick={() => router.push(`${def.basePath}/${entry.id}/edit`)}
-                      className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+                      onClick={
+                        readOnly
+                          ? undefined
+                          : () =>
+                              router.push(`${def.basePath}/${entry.id}/edit`)
+                      }
+                      className={`border-b last:border-0 ${
+                        readOnly ? "" : "cursor-pointer hover:bg-slate-50"
+                      }`}
                     >
                       {def.columns.map((c) => (
                         <td
@@ -234,9 +273,9 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
             <ul className="space-y-2 sm:hidden">
               {data.items.map((entry) => (
                 <li key={entry.id}>
-                  <Link
+                  <CardWrapper
+                    readOnly={readOnly}
                     href={`${def.basePath}/${entry.id}/edit`}
-                    className="block min-h-[44px] rounded bg-white p-4 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-medium text-slate-800">
@@ -253,7 +292,7 @@ export function EntryListPage({ def }: { def: ModuleDef }) {
                           <Badge key={c.key} value={cellValue(entry, c.key)} />
                         ))}
                     </div>
-                  </Link>
+                  </CardWrapper>
                 </li>
               ))}
             </ul>
