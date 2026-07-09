@@ -59,3 +59,105 @@ export const changePasswordSchema = z
     newPassword: passwordSchema,
   })
   .strip();
+
+// --- Entry modules (docs/API_SPEC.md "Entry resources") ---
+
+const titleSchema = z.string().trim().min(1, "Title is required").max(200);
+const longTextSchema = z.string().trim().max(5000);
+const requiredLongTextSchema = z
+  .string()
+  .trim()
+  .min(1, "Required")
+  .max(5000);
+
+export const tagsSchema = z
+  .array(z.string().trim().min(1, "Tags cannot be empty").max(30))
+  .max(10, "At most 10 tags");
+
+export const taskCreateSchema = z
+  .object({
+    date: dateOnlySchema,
+    title: titleSchema,
+    description: longTextSchema.nullable().optional(),
+    category: z.enum(TASK_CATEGORIES),
+    status: z.enum(TASK_STATUSES).default("TODO"),
+    priority: z.enum(TASK_PRIORITIES).default("MEDIUM"),
+  })
+  .strip();
+
+export const taskPatchSchema = z
+  .object({
+    date: dateOnlySchema.optional(),
+    title: titleSchema.optional(),
+    description: longTextSchema.nullable().optional(),
+    category: z.enum(TASK_CATEGORIES).optional(),
+    status: z.enum(TASK_STATUSES).optional(),
+    priority: z.enum(TASK_PRIORITIES).optional(),
+  })
+  .strip();
+
+export const issueCreateSchema = z
+  .object({
+    date: dateOnlySchema,
+    title: titleSchema,
+    description: longTextSchema.nullable().optional(),
+    severity: z.enum(ISSUE_SEVERITIES),
+    status: z.enum(ISSUE_STATUSES).default("OPEN"),
+    resolutionNotes: longTextSchema.nullable().optional(),
+  })
+  .strip();
+
+export const issuePatchSchema = z
+  .object({
+    date: dateOnlySchema.optional(),
+    title: titleSchema.optional(),
+    description: longTextSchema.nullable().optional(),
+    severity: z.enum(ISSUE_SEVERITIES).optional(),
+    status: z.enum(ISSUE_STATUSES).optional(),
+    resolutionNotes: longTextSchema.nullable().optional(),
+  })
+  .strip();
+
+export const feedbackCreateSchema = z
+  .object({
+    date: dateOnlySchema,
+    subject: titleSchema,
+    type: z.enum(FEEDBACK_TYPES),
+    details: requiredLongTextSchema,
+  })
+  .strip();
+
+export const feedbackPatchSchema = z
+  .object({
+    date: dateOnlySchema.optional(),
+    subject: titleSchema.optional(),
+    type: z.enum(FEEDBACK_TYPES).optional(),
+    details: requiredLongTextSchema.optional(),
+  })
+  .strip();
+
+export const noteCreateSchema = z
+  .object({
+    date: dateOnlySchema,
+    title: titleSchema,
+    content: requiredLongTextSchema,
+    tags: tagsSchema.default([]),
+  })
+  .strip();
+
+export const notePatchSchema = z
+  .object({
+    date: dateOnlySchema.optional(),
+    title: titleSchema.optional(),
+    content: requiredLongTextSchema.optional(),
+    tags: tagsSchema.optional(),
+  })
+  .strip();
+
+export const listQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  userId: z.string().optional(),
+  from: dateOnlySchema.optional(),
+  to: dateOnlySchema.optional(),
+});
