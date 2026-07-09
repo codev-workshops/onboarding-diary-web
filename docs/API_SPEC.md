@@ -90,9 +90,9 @@ Schema: `{ id, authorId, date, title, content, tags: string[], createdAt, update
 |---|---|---|---|
 | GET | /api/dashboard | any | Role-appropriate summary |
 
-- Recruit → `{ taskCounts: {TODO,IN_PROGRESS,DONE,BLOCKED}, completionPct, openIssues, feedbackCount, noteCount, recent: [{type,id,title,date}] (5) }`
+- Recruit → `{ taskCounts: {TODO,IN_PROGRESS,DONE,BLOCKED}, completionPct, openIssues, openIssuesBySeverity, feedbackCount, noteCount, recent: [{type,id,title,date}] (5) }`
 - Manager → `{ recruits: [{ userId, name, completionPct, openIssues, lastActivity }] }`
-- Admin → `{ usersByRole, totals: {tasks,issues,feedback,notes} }`
+- Admin → `{ usersByRole, totals: {tasks,issues,feedback,notes}, openIssuesBySeverity }`
 
 ## Reports
 

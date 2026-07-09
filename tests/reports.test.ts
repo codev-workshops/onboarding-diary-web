@@ -188,6 +188,14 @@ describe("report helpers", () => {
     expect(csvEscape("multi\nline")).toBe('"multi\nline"');
   });
 
+  it("csvEscape neutralizes spreadsheet formula triggers", () => {
+    expect(csvEscape('=CMD("calc")')).toBe('"\'=CMD(""calc"")"');
+    expect(csvEscape("+1")).toBe("'+1");
+    expect(csvEscape("-1")).toBe("'-1");
+    expect(csvEscape("@sum")).toBe("'@sum");
+    expect(csvEscape("a=b")).toBe("a=b");
+  });
+
   it("reportFilename slugs the user name and includes the range", () => {
     expect(reportFilename("Rita Recruit", "2026-06-01", "2026-06-30", "pdf")).toBe(
       "report_rita-recruit_2026-06-01_2026-06-30.pdf",

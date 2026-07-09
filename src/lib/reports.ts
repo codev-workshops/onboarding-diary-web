@@ -144,12 +144,17 @@ export async function gatherReportData(
   return { user: target, from: query.from, to: query.to, sections };
 }
 
-/** RFC 4180 field escaping: quote when needed, double embedded quotes. */
+/**
+ * RFC 4180 field escaping (quote when needed, double embedded quotes),
+ * plus a leading apostrophe on formula-triggering characters so spreadsheet
+ * apps treat user content as text (CSV/formula injection defense).
+ */
 export function csvEscape(value: string): string {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (/[",\r\n]/.test(guarded)) {
+    return `"${guarded.replace(/"/g, '""')}"`;
   }
-  return value;
+  return guarded;
 }
 
 export function reportToCsv(data: ReportData): string {
