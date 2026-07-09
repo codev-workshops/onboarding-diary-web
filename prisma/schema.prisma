@@ -1,0 +1,114 @@
+// Prisma schema — per docs/DATA_MODEL.md
+// SQLite lacks native enums; enum-like fields are strings validated at the app
+// layer (zod) against the documented value sets. Postgres-ready.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("RECRUIT") // RECRUIT | MANAGER | ADMIN
+  department   String?
+  startDate    DateTime?
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tasks       TaskEntry[]
+  issues      IssueEntry[]
+  feedback    FeedbackEntry[]
+  notes       NoteEntry[]
+  managedBy   ManagerAssignment[] @relation("Recruit")
+  manages     ManagerAssignment[] @relation("Manager")
+}
+
+model ManagerAssignment {
+  id        String   @id @default(cuid())
+  managerId String
+  recruitId String
+  createdAt DateTime @default(now())
+
+  manager User @relation("Manager", fields: [managerId], references: [id], onDelete: Cascade)
+  recruit User @relation("Recruit", fields: [recruitId], references: [id], onDelete: Cascade)
+
+  @@unique([managerId, recruitId])
+  @@index([managerId])
+  @@index([recruitId])
+}
+
+model TaskEntry {
+  id          String   @id @default(cuid())
+  authorId    String
+  date        DateTime
+  title       String
+  description String?
+  category    String // GENERAL | TRAINING | SETUP | MEETING | DOCUMENTATION | OTHER
+  status      String   @default("TODO") // TODO | IN_PROGRESS | DONE | BLOCKED
+  priority    String   @default("MEDIUM") // LOW | MEDIUM | HIGH
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([authorId, date])
+}
+
+model IssueEntry {
+  id              String   @id @default(cuid())
+  authorId        String
+  date            DateTime
+  title           String
+  description     String?
+  severity        String // LOW | MEDIUM | HIGH | CRITICAL
+  status          String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED
+  resolutionNotes String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([authorId, date])
+}
+
+model FeedbackEntry {
+  id        String   @id @default(cuid())
+  authorId  String
+  date      DateTime
+  subject   String
+  type      String // POSITIVE | SUGGESTION | CONCERN
+  details   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([authorId, date])
+}
+
+model NoteEntry {
+  id        String   @id @default(cuid())
+  authorId  String
+  date      DateTime
+  title     String
+  content   String
+  tags      String   @default("") // comma-separated; exposed as array in API
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([authorId, date])
+}
