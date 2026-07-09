@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { HttpError } from "@/lib/errors";
 import { managerOversees, type SessionUser } from "@/lib/guards";
@@ -244,26 +245,25 @@ export async function createAssignment(
   ) {
     throw new HttpError("FORBIDDEN", "Recruit is not assigned to you");
   }
-  const existing = await prisma.checklistAssignment.findUnique({
-    where: {
-      templateId_recruitId: {
+  try {
+    const assignment = await prisma.checklistAssignment.create({
+      data: {
         templateId: data.templateId,
         recruitId: data.recruitId,
+        assignedById: user.id,
       },
-    },
-  });
-  if (existing) {
-    throw new HttpError("CONFLICT", "Template already assigned to recruit");
+      include: assignmentInclude,
+    });
+    return serializeAssignment(assignment);
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      throw new HttpError("CONFLICT", "Template already assigned to recruit");
+    }
+    throw err;
   }
-  const assignment = await prisma.checklistAssignment.create({
-    data: {
-      templateId: data.templateId,
-      recruitId: data.recruitId,
-      assignedById: user.id,
-    },
-    include: assignmentInclude,
-  });
-  return serializeAssignment(assignment);
 }
 
 async function getScopedAssignment(

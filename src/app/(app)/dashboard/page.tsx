@@ -139,70 +139,72 @@ function checklistLabel(
 
 function ManagerView({ data }: { data: ManagerDashboard }) {
   return (
-    <div className="mt-4 rounded bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-slate-700">My recruits</h2>
-      {data.recruits.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">
-          No recruits assigned to you yet.
-        </p>
-      ) : (
-        <>
-          {/* Table ≥640px */}
-          <div className="mt-2 hidden overflow-x-auto sm:block">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Recruit</th>
-                  <th className="px-4 py-3">Task completion</th>
-                  <th className="px-4 py-3">Open issues</th>
-                  <th className="px-4 py-3">Checklist</th>
-                  <th className="px-4 py-3">Last activity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recruits.map((r) => (
-                  <tr key={r.userId} className="border-b last:border-0">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/recruits/${r.userId}`}
-                        className="font-medium text-blue-600 underline"
-                      >
-                        {r.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">{r.completionPct}%</td>
-                    <td className="px-4 py-3">{r.openIssues}</td>
-                    <td className="px-4 py-3">{checklistLabel(r.checklist)}</td>
-                    <td className="px-4 py-3">{r.lastActivity ?? "—"}</td>
+    <>
+      <div className="mt-4 rounded bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-700">My recruits</h2>
+        {data.recruits.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            No recruits assigned to you yet.
+          </p>
+        ) : (
+          <>
+            {/* Table ≥640px */}
+            <div className="mt-2 hidden overflow-x-auto sm:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Recruit</th>
+                    <th className="px-4 py-3">Task completion</th>
+                    <th className="px-4 py-3">Open issues</th>
+                    <th className="px-4 py-3">Checklist</th>
+                    <th className="px-4 py-3">Last activity</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Stacked cards <640px */}
-          <ul className="mt-2 space-y-2 sm:hidden">
-            {data.recruits.map((r) => (
-              <li key={r.userId}>
-                <Link
-                  href={`/recruits/${r.userId}`}
-                  className="block min-h-[44px] rounded border border-slate-200 p-3"
-                >
-                  <span className="font-medium text-blue-600 underline">
-                    {r.name}
-                  </span>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {r.completionPct}% tasks done · {r.openIssues} open issues ·
-                    checklist {checklistLabel(r.checklist)} · last activity{" "}
-                    {r.lastActivity ?? "—"}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+                </thead>
+                <tbody>
+                  {data.recruits.map((r) => (
+                    <tr key={r.userId} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/recruits/${r.userId}`}
+                          className="font-medium text-blue-600 underline"
+                        >
+                          {r.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">{r.completionPct}%</td>
+                      <td className="px-4 py-3">{r.openIssues}</td>
+                      <td className="px-4 py-3">{checklistLabel(r.checklist)}</td>
+                      <td className="px-4 py-3">{r.lastActivity ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Stacked cards <640px */}
+            <ul className="mt-2 space-y-2 sm:hidden">
+              {data.recruits.map((r) => (
+                <li key={r.userId}>
+                  <Link
+                    href={`/recruits/${r.userId}`}
+                    className="block min-h-[44px] rounded border border-slate-200 p-3"
+                  >
+                    <span className="font-medium text-blue-600 underline">
+                      {r.name}
+                    </span>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {r.completionPct}% tasks done · {r.openIssues} open issues ·
+                      checklist {checklistLabel(r.checklist)} · last activity{" "}
+                      {r.lastActivity ?? "—"}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
       <DashboardChartsSection charts={data.charts} />
-    </div>
+    </>
   );
 }
 
