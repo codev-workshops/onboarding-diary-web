@@ -8,7 +8,8 @@ import type { Entry, FieldDef, ModuleDef } from "@/components/entries/config";
 function initialValue(field: FieldDef, entry: Entry | null): string {
   if (!entry) {
     if (field.type === "date") return new Date().toISOString().slice(0, 10);
-    if (field.type === "select") return field.options?.[0] ?? "";
+    if (field.type === "select")
+      return field.defaultValue ?? field.options?.[0] ?? "";
     return "";
   }
   const value = entry[field.name];

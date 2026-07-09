@@ -15,6 +15,7 @@ export type FieldDef = {
   type: "date" | "text" | "textarea" | "select" | "tags";
   options?: readonly string[];
   required?: boolean;
+  defaultValue?: string;
 };
 
 export type ColumnDef = {
@@ -73,7 +74,7 @@ export const TASKS_MODULE: ModuleDef = {
     { name: "title", label: "Title", type: "text", required: true },
     { name: "category", label: "Category", type: "select", options: TASK_CATEGORIES, required: true },
     { name: "status", label: "Status", type: "select", options: TASK_STATUSES, required: true },
-    { name: "priority", label: "Priority", type: "select", options: TASK_PRIORITIES, required: true },
+    { name: "priority", label: "Priority", type: "select", options: TASK_PRIORITIES, required: true, defaultValue: "MEDIUM" },
     { name: "description", label: "Description", type: "textarea" },
   ],
 };
