@@ -184,3 +184,33 @@ Enforcement: every API handler resolves the session server-side, checks role, an
 | XSS | React auto-escaping; no `dangerouslySetInnerHTML`; user content rendered as text |
 | CSRF | NextAuth built-in CSRF token on auth routes; SameSite=Lax cookies; state-changing routes require session |
 | Sensitive data exposure | Password hash never serialized in API responses; logs exclude credentials and tokens |
+
+## Extensions
+
+### E1 — Dashboard charts
+
+The role-scoped dashboard is extended with three charts rendered with recharts (fluid via `ResponsiveContainer`, with loading skeletons and per-chart "No data yet." empty states):
+
+- **Task status donut** — task counts by status (TODO / IN_PROGRESS / DONE / BLOCKED).
+- **Open issues by severity bar** — OPEN + IN_PROGRESS issue counts per severity (CRITICAL / HIGH / MEDIUM / LOW).
+- **14-day activity timeline** — entries per day per type (tasks, issues, feedback, notes) for the last 14 days including today (UTC days).
+
+Chart data is aggregated **server-side** and scoped identically to the rest of the dashboard: recruit sees own entries; manager sees the union of assigned recruits' entries; admin sees org-wide data. A manager with no recruits sees empty charts.
+
+### E2 — Onboarding checklist templates
+
+- Admins and managers create **checklist templates**: a title plus an ordered list of items (1–50 items, each ≤500 chars). Templates can be updated (replacing items resets the ordered list) and deleted.
+- A manager assigns a template to a recruit they oversee (admin: any recruit). A given template can be assigned to a recruit at most once (duplicate → 409).
+- The recruit views their assigned checklists and ticks/unticks items; a **progress percentage** (completed/total, rounded) is shown per checklist.
+- Item completion is recruit-only on their own assignment; managers/admins have read-only access to progress (mutation → 403; out-of-scope reads → 404, consistent with the authorization matrix).
+- The manager dashboard roster gains a per-recruit **Checklist** column aggregating progress across all of that recruit's assignments.
+
+Authorization matrix additions:
+
+| Capability | Recruit | Manager | Admin |
+|---|---|---|---|
+| Templates (create/read/update/delete) | — | full | full |
+| Assign template to recruit | — | assigned recruits only | any recruit |
+| View assignments | own | assigned recruits' | all |
+| Tick/untick checklist items | own assignments only | — | — |
+| Remove assignment | — | assigned recruits only | any |

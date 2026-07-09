@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDashboard } from "@/lib/dashboard";
+import { DashboardChartsSection } from "@/components/dashboard-charts";
 import type {
   AdminDashboard,
   ManagerDashboard,
@@ -56,6 +57,8 @@ function RecruitView({ data }: { data: RecruitDashboard }) {
         <StatCard label="Feedback" value={data.feedbackCount} />
         <StatCard label="Notes" value={data.noteCount} />
       </div>
+
+      <DashboardChartsSection charts={data.charts} />
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded bg-white p-4 shadow-sm">
@@ -127,6 +130,13 @@ function RecruitView({ data }: { data: RecruitDashboard }) {
   );
 }
 
+function checklistLabel(
+  checklist: { completed: number; total: number; pct: number } | null,
+): string {
+  if (!checklist || checklist.total === 0) return "—";
+  return `${checklist.pct}% (${checklist.completed}/${checklist.total})`;
+}
+
 function ManagerView({ data }: { data: ManagerDashboard }) {
   return (
     <div className="mt-4 rounded bg-white p-4 shadow-sm">
@@ -145,6 +155,7 @@ function ManagerView({ data }: { data: ManagerDashboard }) {
                   <th className="px-4 py-3">Recruit</th>
                   <th className="px-4 py-3">Task completion</th>
                   <th className="px-4 py-3">Open issues</th>
+                  <th className="px-4 py-3">Checklist</th>
                   <th className="px-4 py-3">Last activity</th>
                 </tr>
               </thead>
@@ -161,6 +172,7 @@ function ManagerView({ data }: { data: ManagerDashboard }) {
                     </td>
                     <td className="px-4 py-3">{r.completionPct}%</td>
                     <td className="px-4 py-3">{r.openIssues}</td>
+                    <td className="px-4 py-3">{checklistLabel(r.checklist)}</td>
                     <td className="px-4 py-3">{r.lastActivity ?? "—"}</td>
                   </tr>
                 ))}
@@ -180,7 +192,8 @@ function ManagerView({ data }: { data: ManagerDashboard }) {
                   </span>
                   <p className="mt-1 text-xs text-slate-600">
                     {r.completionPct}% tasks done · {r.openIssues} open issues ·
-                    last activity {r.lastActivity ?? "—"}
+                    checklist {checklistLabel(r.checklist)} · last activity{" "}
+                    {r.lastActivity ?? "—"}
                   </p>
                 </Link>
               </li>
@@ -188,6 +201,7 @@ function ManagerView({ data }: { data: ManagerDashboard }) {
           </ul>
         </>
       )}
+      <DashboardChartsSection charts={data.charts} />
     </div>
   );
 }
@@ -226,6 +240,7 @@ function AdminView({ data }: { data: AdminDashboard }) {
           </div>
         </div>
       </div>
+      <DashboardChartsSection charts={data.charts} />
     </>
   );
 }

@@ -157,3 +157,90 @@ erDiagram
         string tags
     }
 ```
+
+## Extensions — Checklists
+
+Templates/items are kept separate from assignments/completions: a template is a reusable definition; assigning it to a recruit creates a `ChecklistAssignment`, and each ticked item is a `ChecklistItemCompletion` row (progress is derived, never stored).
+
+### ChecklistTemplate
+
+| Field | Type | Constraints |
+|---|---|---|
+| id | String (cuid) | PK |
+| title | String | 1–200 |
+| createdById | String | FK → User.id (role MANAGER/ADMIN, app-enforced) |
+| createdAt / updatedAt | DateTime | auto |
+
+### ChecklistTemplateItem
+
+| Field | Type | Constraints |
+|---|---|---|
+| id | String (cuid) | PK |
+| templateId | String | FK → ChecklistTemplate.id (cascade) |
+| text | String | 1–500 |
+| order | Int | 1-based position; `@@unique([templateId, order])` |
+
+### ChecklistAssignment
+
+| Field | Type | Constraints |
+|---|---|---|
+| id | String (cuid) | PK |
+| templateId | String | FK → ChecklistTemplate.id (cascade) |
+| recruitId | String | FK → User.id (role RECRUIT, app-enforced) |
+| assignedById | String | FK → User.id (manager/admin) |
+| createdAt | DateTime | auto |
+
+Constraints: `@@unique([templateId, recruitId])` — a template is assigned to a recruit at most once.
+
+### ChecklistItemCompletion
+
+| Field | Type | Constraints |
+|---|---|---|
+| id | String (cuid) | PK |
+| assignmentId | String | FK → ChecklistAssignment.id (cascade) |
+| itemId | String | FK → ChecklistTemplateItem.id (cascade) |
+| completedAt | DateTime | auto |
+
+Constraints: `@@unique([assignmentId, itemId])` — an item is completed at most once per assignment; unticking deletes the row.
+
+### Relations & indexes
+
+- ChecklistTemplate 1—N ChecklistTemplateItem; 1—N ChecklistAssignment (both cascade on template delete).
+- ChecklistAssignment 1—N ChecklistItemCompletion (cascade on assignment delete); deleting a template item cascades its completions.
+- User 1—N ChecklistTemplate (creator), 1—N ChecklistAssignment (as recruit and as assigner); all cascade with the user.
+- Indexes: `ChecklistTemplate.createdById`; `ChecklistTemplateItem.templateId`; `ChecklistAssignment.recruitId`, `.templateId`; `ChecklistItemCompletion.assignmentId`.
+
+```mermaid
+erDiagram
+    User ||--o{ ChecklistTemplate : "creates"
+    User ||--o{ ChecklistAssignment : "assigned (as recruit)"
+    User ||--o{ ChecklistAssignment : "assigns (as manager/admin)"
+    ChecklistTemplate ||--o{ ChecklistTemplateItem : "has"
+    ChecklistTemplate ||--o{ ChecklistAssignment : "assigned via"
+    ChecklistAssignment ||--o{ ChecklistItemCompletion : "progress"
+    ChecklistTemplateItem ||--o{ ChecklistItemCompletion : "ticked as"
+
+    ChecklistTemplate {
+        string id PK
+        string title
+        string createdById FK
+    }
+    ChecklistTemplateItem {
+        string id PK
+        string templateId FK
+        string text
+        int order
+    }
+    ChecklistAssignment {
+        string id PK
+        string templateId FK
+        string recruitId FK
+        string assignedById FK
+    }
+    ChecklistItemCompletion {
+        string id PK
+        string assignmentId FK
+        string itemId FK
+        datetime completedAt
+    }
+```
