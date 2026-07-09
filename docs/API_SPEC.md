@@ -120,3 +120,45 @@ Schema: `{ id, authorId, date, title, content, tags: string[], createdAt, update
 | DELETE | /api/admin/assignments/:id | admin | Remove assignment |
 
 Assignment validation: `managerId` must be role MANAGER, `recruitId` role RECRUIT, pair unique (409 on duplicate). Admin cannot deactivate or demote the last active admin (400).
+
+## Extensions — Checklists
+
+Same conventions as above (session auth, error shape, cuid IDs). All checklist bodies are JSON.
+
+| Method | Path | Role | Description |
+|---|---|---|---|
+| GET | /api/checklists/templates | manager, admin | List templates with ordered items (`{ items: [...] }`) |
+| POST | /api/checklists/templates | manager, admin | Create template `{ title, items: string[] }` (1–50 items, each 1–500 chars) |
+| GET | /api/checklists/templates/:id | manager, admin | Fetch one template |
+| PATCH | /api/checklists/templates/:id | manager, admin | Update `{ title?, items? }` — providing `items` replaces the full ordered list |
+| DELETE | /api/checklists/templates/:id | manager, admin | Delete template (cascades assignments/completions); 204 |
+| GET | /api/checklists/assignments | any | Scoped list: recruit → own; manager → assigned recruits'; admin → all |
+| POST | /api/checklists/assignments | manager, admin | Assign `{ templateId, recruitId }`; manager limited to assigned recruits (else 403); duplicate pair → 409; unknown template/recruit → 404 |
+| GET | /api/checklists/assignments/:id | scoped | Fetch one assignment with items + completion state; out-of-scope → 404 |
+| DELETE | /api/checklists/assignments/:id | manager (scoped), admin | Remove assignment; recruit → 403; 204 |
+| PUT | /api/checklists/assignments/:id/items/:itemId/completion | recruit (owner) | Mark item complete (idempotent); manager/admin → 403 |
+| DELETE | /api/checklists/assignments/:id/items/:itemId/completion | recruit (owner) | Mark item incomplete; manager/admin → 403 |
+
+**Template shape** — `{ id, title, createdById, createdAt, updatedAt, items: [{ id, text, order }], assignmentCount }`; `items` sorted by `order` (1-based).
+
+**Assignment shape** — `{ id, templateId, templateTitle, recruitId, recruitName, assignedById, createdAt, items: [{ id, text, order, completed, completedAt }], completedCount, totalCount, progressPct }`. `progressPct` = round(completed/total×100); 0 when the template has no items.
+
+## Extensions — Dashboard charts
+
+`GET /api/dashboard` responses (all roles) gain a `charts` object, aggregated server-side with the same scoping as the rest of the payload:
+
+```json
+{
+  "charts": {
+    "taskStatus": [{ "status": "TODO", "count": 1 }, ...],
+    "issuesBySeverity": [{ "severity": "CRITICAL", "count": 0 }, ...],
+    "activityTimeline": [{ "date": "2026-07-09", "tasks": 1, "issues": 0, "feedback": 0, "notes": 1 }, ...]
+  }
+}
+```
+
+- `taskStatus`: all four statuses, zero-filled.
+- `issuesBySeverity`: OPEN + IN_PROGRESS issues only, all four severities zero-filled, CRITICAL→LOW order.
+- `activityTimeline`: exactly 14 entries (UTC days, oldest first, ending today), zero-filled.
+
+Manager dashboard `recruits[]` rows additionally gain `checklist: { completed, total, pct } | null` (null when the recruit has no checklist assignments).

@@ -1,12 +1,27 @@
 import { prisma } from "@/lib/prisma";
 import type { SessionUser } from "@/lib/guards";
 import { TASK_STATUSES } from "@/lib/validation";
+import { checklistProgressByRecruit } from "@/lib/checklists";
 
 export type RecentEntry = {
   type: "task" | "issue" | "feedback" | "note";
   id: string;
   title: string;
   date: string;
+};
+
+export type ActivityDay = {
+  date: string;
+  tasks: number;
+  issues: number;
+  feedback: number;
+  notes: number;
+};
+
+export type DashboardCharts = {
+  taskStatus: { status: string; count: number }[];
+  issuesBySeverity: { severity: string; count: number }[];
+  activityTimeline: ActivityDay[];
 };
 
 export type RecruitDashboard = {
@@ -17,6 +32,7 @@ export type RecruitDashboard = {
   feedbackCount: number;
   noteCount: number;
   recent: RecentEntry[];
+  charts: DashboardCharts;
 };
 
 export type ManagerDashboard = {
@@ -26,13 +42,16 @@ export type ManagerDashboard = {
     completionPct: number;
     openIssues: number;
     lastActivity: string | null;
+    checklist: { completed: number; total: number; pct: number } | null;
   }[];
+  charts: DashboardCharts;
 };
 
 export type AdminDashboard = {
   usersByRole: Record<string, number>;
   totals: { tasks: number; issues: number; feedback: number; notes: number };
   openIssuesBySeverity: Record<string, number>;
+  charts: DashboardCharts;
 };
 
 export type Dashboard =
@@ -50,9 +69,86 @@ function completionPct(done: number, total: number): number {
   return total === 0 ? 0 : Math.round((done / total) * 100);
 }
 
-async function recruitDashboard(userId: string): Promise<RecruitDashboard> {
-  const [taskGroups, openBySeverity, feedbackCount, noteCount] =
+const TIMELINE_DAYS = 14;
+
+type AuthorWhere = { authorId?: string | { in: string[] } };
+
+/**
+ * Chart aggregations scoped by `authorWhere` (recruit: own entries;
+ * manager: assigned recruits; admin: everything).
+ */
+async function chartData(authorWhere: AuthorWhere): Promise<DashboardCharts> {
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - (TIMELINE_DAYS - 1));
+  const dateScope = { ...authorWhere, date: { gte: since } };
+
+  const [taskGroups, severityGroups, tasks, issues, feedback, notes] =
     await Promise.all([
+      prisma.taskEntry.groupBy({
+        by: ["status"],
+        where: authorWhere,
+        _count: { _all: true },
+      }),
+      prisma.issueEntry.groupBy({
+        by: ["severity"],
+        where: { ...authorWhere, status: { in: OPEN_ISSUE_STATUSES } },
+        _count: { _all: true },
+      }),
+      prisma.taskEntry.findMany({ where: dateScope, select: { date: true } }),
+      prisma.issueEntry.findMany({ where: dateScope, select: { date: true } }),
+      prisma.feedbackEntry.findMany({
+        where: dateScope,
+        select: { date: true },
+      }),
+      prisma.noteEntry.findMany({ where: dateScope, select: { date: true } }),
+    ]);
+
+  const statusCounts = new Map(
+    taskGroups.map((g) => [g.status, g._count._all]),
+  );
+  const taskStatus = TASK_STATUSES.map((status) => ({
+    status,
+    count: statusCounts.get(status) ?? 0,
+  }));
+
+  const severityCounts = new Map(
+    severityGroups.map((g) => [g.severity, g._count._all]),
+  );
+  const issuesBySeverity = ISSUE_SEVERITY_ORDER.map((severity) => ({
+    severity,
+    count: severityCounts.get(severity) ?? 0,
+  }));
+
+  const byDay = new Map<string, ActivityDay>();
+  for (let i = 0; i < TIMELINE_DAYS; i++) {
+    const d = new Date(since);
+    d.setUTCDate(since.getUTCDate() + i);
+    const key = dateOnly(d);
+    byDay.set(key, { date: key, tasks: 0, issues: 0, feedback: 0, notes: 0 });
+  }
+  const bump = (rows: { date: Date }[], field: keyof Omit<ActivityDay, "date">) => {
+    for (const row of rows) {
+      const day = byDay.get(dateOnly(row.date));
+      if (day) day[field] += 1;
+    }
+  };
+  bump(tasks, "tasks");
+  bump(issues, "issues");
+  bump(feedback, "feedback");
+  bump(notes, "notes");
+
+  const activityTimeline: ActivityDay[] = [];
+  byDay.forEach((day) => activityTimeline.push(day));
+  return { taskStatus, issuesBySeverity, activityTimeline };
+}
+
+const ISSUE_SEVERITY_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+
+async function recruitDashboard(userId: string): Promise<RecruitDashboard> {
+  const [charts, taskGroups, openBySeverity, feedbackCount, noteCount] =
+    await Promise.all([
+      chartData({ authorId: userId }),
       prisma.taskEntry.groupBy({
         by: ["status"],
         where: { authorId: userId },
@@ -141,6 +237,7 @@ async function recruitDashboard(userId: string): Promise<RecruitDashboard> {
       title,
       date,
     })),
+    charts,
   };
 }
 
@@ -151,10 +248,14 @@ async function managerDashboard(managerId: string): Promise<ManagerDashboard> {
     orderBy: { createdAt: "asc" },
   });
   const recruitIds = assignments.map((a) => a.recruitId);
-  if (recruitIds.length === 0) return { recruits: [] };
+  if (recruitIds.length === 0) {
+    return { recruits: [], charts: await chartData({ authorId: { in: [] } }) };
+  }
 
   const authorScope = { authorId: { in: recruitIds } };
-  const [taskGroups, openIssueGroups, ...activityGroups] = await Promise.all([
+  const [charts, checklistProgress, taskGroups, openIssueGroups, ...activityGroups] = await Promise.all([
+    chartData(authorScope),
+    checklistProgressByRecruit(recruitIds),
     prisma.taskEntry.groupBy({
       by: ["authorId", "status"],
       where: authorScope,
@@ -221,13 +322,16 @@ async function managerDashboard(managerId: string): Promise<ManagerDashboard> {
       lastActivity: lastActivityByAuthor.has(a.recruitId)
         ? dateOnly(lastActivityByAuthor.get(a.recruitId)!)
         : null,
+      checklist: checklistProgress.get(a.recruitId) ?? null,
     })),
+    charts,
   };
 }
 
 async function adminDashboard(): Promise<AdminDashboard> {
-  const [roleGroups, tasks, issues, feedback, notes, openBySeverity] =
+  const [charts, roleGroups, tasks, issues, feedback, notes, openBySeverity] =
     await Promise.all([
+      chartData({}),
       prisma.user.groupBy({ by: ["role"], _count: { _all: true } }),
       prisma.taskEntry.count(),
       prisma.issueEntry.count(),
@@ -247,6 +351,7 @@ async function adminDashboard(): Promise<AdminDashboard> {
     openIssuesBySeverity: Object.fromEntries(
       openBySeverity.map((g) => [g.severity, g._count._all]),
     ),
+    charts,
   };
 }
 

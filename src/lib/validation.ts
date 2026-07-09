@@ -154,6 +154,42 @@ export const notePatchSchema = z
   })
   .strip();
 
+// --- Checklists (docs/API_SPEC.md "Extensions") ---
+
+const checklistItemTextSchema = z
+  .string()
+  .trim()
+  .min(1, "Item text is required")
+  .max(500);
+
+export const checklistTemplateCreateSchema = z
+  .object({
+    title: titleSchema,
+    items: z
+      .array(checklistItemTextSchema)
+      .min(1, "At least one item is required")
+      .max(50, "At most 50 items"),
+  })
+  .strip();
+
+export const checklistTemplatePatchSchema = z
+  .object({
+    title: titleSchema.optional(),
+    items: z
+      .array(checklistItemTextSchema)
+      .min(1, "At least one item is required")
+      .max(50, "At most 50 items")
+      .optional(),
+  })
+  .strip();
+
+export const checklistAssignmentCreateSchema = z
+  .object({
+    templateId: z.string().min(1, "Template is required"),
+    recruitId: z.string().min(1, "Recruit is required"),
+  })
+  .strip();
+
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),

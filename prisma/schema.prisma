@@ -29,6 +29,10 @@ model User {
   notes       NoteEntry[]
   managedBy   ManagerAssignment[] @relation("Recruit")
   manages     ManagerAssignment[] @relation("Manager")
+
+  checklistTemplates   ChecklistTemplate[]   @relation("TemplateCreator")
+  checklistAssignments ChecklistAssignment[] @relation("AssignmentRecruit")
+  checklistsAssigned   ChecklistAssignment[] @relation("AssignmentAssigner")
 }
 
 model ManagerAssignment {
@@ -95,6 +99,63 @@ model FeedbackEntry {
 
   @@index([authorId])
   @@index([authorId, date])
+}
+
+model ChecklistTemplate {
+  id          String   @id @default(cuid())
+  title       String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User                  @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  items       ChecklistTemplateItem[]
+  assignments ChecklistAssignment[]
+
+  @@index([createdById])
+}
+
+model ChecklistTemplateItem {
+  id         String @id @default(cuid())
+  templateId String
+  text       String
+  order      Int
+
+  template    ChecklistTemplate         @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  completions ChecklistItemCompletion[]
+
+  @@unique([templateId, order])
+  @@index([templateId])
+}
+
+model ChecklistAssignment {
+  id           String   @id @default(cuid())
+  templateId   String
+  recruitId    String
+  assignedById String
+  createdAt    DateTime @default(now())
+
+  template    ChecklistTemplate         @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  recruit     User                      @relation("AssignmentRecruit", fields: [recruitId], references: [id], onDelete: Cascade)
+  assignedBy  User                      @relation("AssignmentAssigner", fields: [assignedById], references: [id], onDelete: Cascade)
+  completions ChecklistItemCompletion[]
+
+  @@unique([templateId, recruitId])
+  @@index([recruitId])
+  @@index([templateId])
+}
+
+model ChecklistItemCompletion {
+  id           String   @id @default(cuid())
+  assignmentId String
+  itemId       String
+  completedAt  DateTime @default(now())
+
+  assignment ChecklistAssignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  item       ChecklistTemplateItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, itemId])
+  @@index([assignmentId])
 }
 
 model NoteEntry {
